@@ -1,0 +1,2 @@
+include ':app', ':uiplayer2'
+rootProject.name='UIPlayer'
