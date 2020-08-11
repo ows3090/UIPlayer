@@ -18,7 +18,7 @@ public class UIService extends Service {
 
     private String host;
     private int port;
-    private ClientThread clientThread;
+    //private ClientThread clientThread;
     private SocketListener socketListener;
     private final IBinder mbinder = new LocalBinder();
 
@@ -28,26 +28,26 @@ public class UIService extends Service {
         }
     }
 
-    class ClientThread extends Thread{
-        @Override
-        public void run() {
-            try{
-                Socket socket = new Socket(host,port);
+//    class ClientThread extends Thread{
+//        @Override
+//        public void run() {
+//            try{
+//                Socket socket = new Socket(host,port);
 
 //                while(true){
 //                    ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
 //                    Object input = inputStream.readObject();
 //                    socketListener.onReceive((String)input);
 //                }
-                ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-                Object input = inputStream.readObject();
-                socketListener.onReceive((String[])input);
-
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-    }
+//                ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+//                Object input = inputStream.readObject();
+//                socketListener.onReceive((String[])input);
+//
+//            }catch (Exception e){
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
     public UIService() {
     }
@@ -57,7 +57,7 @@ public class UIService extends Service {
         super.onCreate();
         host = DEFAULT_HOST;
         port = DEFAULT_PORT;
-        clientThread = new ClientThread();
+        //clientThread = new ClientThread();
     }
 
     @Override
@@ -67,7 +67,6 @@ public class UIService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
         return mbinder;
     }
 
@@ -99,9 +98,9 @@ public class UIService extends Service {
         },10000);
     }
 
-    public void disconnet(){
-        clientThread.stop();
-    }
+//    public void disconnet(){
+////        clientThread.stop();
+////    }
 
 
 }
