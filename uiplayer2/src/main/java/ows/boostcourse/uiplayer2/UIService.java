@@ -18,7 +18,6 @@ public class UIService extends Service {
 
     private String host;
     private int port;
-    //private ClientThread clientThread;
     private SocketListener socketListener;
     private final IBinder mbinder = new LocalBinder();
 
@@ -28,27 +27,6 @@ public class UIService extends Service {
         }
     }
 
-//    class ClientThread extends Thread{
-//        @Override
-//        public void run() {
-//            try{
-//                Socket socket = new Socket(host,port);
-
-//                while(true){
-//                    ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-//                    Object input = inputStream.readObject();
-//                    socketListener.onReceive((String)input);
-//                }
-//                ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-//                Object input = inputStream.readObject();
-//                socketListener.onReceive((String[])input);
-//
-//            }catch (Exception e){
-//                e.printStackTrace();
-//            }
-//        }
-//    }
-
     public UIService() {
     }
 
@@ -57,7 +35,6 @@ public class UIService extends Service {
         super.onCreate();
         host = DEFAULT_HOST;
         port = DEFAULT_PORT;
-        //clientThread = new ClientThread();
     }
 
     @Override
@@ -75,32 +52,23 @@ public class UIService extends Service {
         super.onDestroy();
     }
 
-    public void setSocketListener(SocketListener socketListener){
+    public void init(SocketListener socketListener, String host, int port){
         this.socketListener = socketListener;
-    }
-
-    public void setHostAndPort(String host, int port){
         this.host = host;
         this.port = port;
     }
 
-    public void connet(){
-       // clientThread.start();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("msg","connet");
-                String[] url = new String[2];
-                url[0]="http://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel.ism/.m3u8";
-                url[1]="http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8";
-                socketListener.onReceive(url);
-            }
-        },10000);
+    public void connet(long time){
+        if(time==10){
+            Log.d("msg","connet");
+            String[] url = new String[2];
+            url[0]="http://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel.ism/.m3u8";
+            url[1]="http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8";
+            socketListener.onRequestSelect(url);
+        }
+        else{
+            socketListener.onPreceed();
+        }
     }
-
-//    public void disconnet(){
-////        clientThread.stop();
-////    }
-
 
 }
