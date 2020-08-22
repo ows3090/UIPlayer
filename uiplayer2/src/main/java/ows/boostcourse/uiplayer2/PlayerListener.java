@@ -1,8 +1,7 @@
 package ows.boostcourse.uiplayer2;
 
 public interface PlayerListener {
-
-    void onConnet();
-    void onUserSelect(String[] url);
-
+    void onConnectRespone();
+    void onPreparePlayer(String[] url);
+    void onSelectPlayer(String[] url);
 }

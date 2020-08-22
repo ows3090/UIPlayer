@@ -1,199 +1,181 @@
 package ows.boostcourse.uiplayer2;
 
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
+import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.LoadControl;
-import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.RenderersFactory;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.analytics.AnalyticsCollector;
 import com.google.android.exoplayer2.drm.DrmSessionManager;
 import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.util.Clock;
+import com.google.android.exoplayer2.video.VideoListener;
 
-public class UIPlayer extends SimpleExoPlayer implements Player.EventListener{
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
-    // 소켓통신할 서비스 객체
-    private UIService uiService;
+public class UIPlayer{
 
-    // 서비스 바인딩 유무
-    private boolean isService;
+    private int MAX_PLAYERCOUNT = 5;
+    private int currentPlayerCount = 2;
 
-    // User와 UIPlayer의 상호작용 이벤트 리스너
-    private PlayerListener playerListener;
+    private ExecutorService executorService;
 
-    // UIPlayer와 UIService의 상호작용 이벤트 리스너
-    private SocketListener socketListener = new SocketListener() {
+    private Context context;
+
+    private Class<?> name;
+
+    private DataSource.Factory dataSourceFactory;
+
+    private UIListener uiListener;
+
+    private String[] url = new String[2];
+
+    private Handler prepareHandler = new Handler();
+
+//    private Runnable runnable = new Runnable() {
+//        @Override
+//        public void run() {
+//            for(int i=0;i<currentPlayerCount;i++){
+//
+//                ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor)executorService;
+//
+//                final int position = i;
+//                settingPlayer(position,url[position]);
+////                new Thread(new Runnable() {
+////                    @Override
+////                    public void run() {
+////                        settingPlayer(position,url[position]);
+////                    }
+////                }).start();
+//            }
+//        }
+//    };
+
+
+    private PlayerListener playerListener = new PlayerListener() {
 
         @Override
-        public void onPreceed() {
-            confirmPlaytime();
+        public void onConnectRespone() {
+            uiListener.onConnet();
         }
 
         @Override
-        public void onRequestSelect(String[] url) {
-            setPlayWhenReady(false);
-            playerListener.onUserSelect(url);
-        }
-    };
-
-    private Handler playerHandler = new Handler();
-    private Runnable playerAction = new Runnable() {
-        @Override
-        public void run() {
-            requestPlaytime();
-        }
-    };
-
-    // 서비스 바인딩에 필요한 서비스 Connection 객체
-    private ServiceConnection conn = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            synchronized ((Boolean)isService) {
-                UIService.LocalBinder localBinder = (UIService.LocalBinder) service;
-                uiService = localBinder.getService();
-                isService = true;
-                playerListener.onConnet();
+        public void onPreparePlayer(final String[] url) {
+            setUrl(url);
+            //prepareHandler.post(runnable);
+            for(int i=0;i<currentPlayerCount;i++){
+                final int position = i;
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        Uri uri = Uri.parse(url[position]);
+                        HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+                        playerList[position].prepare(playerListener,hlsMediaSource);
+                        Log.d("msg","준비완료");
+                    }
+                };
+                executorService.execute(runnable);
             }
+//            new Handler().postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//
+//                }
+//            },1000);
+
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName name) {
-            isService = false;
+        public void onSelectPlayer(String[] url) {
+            uiListener.onUserSelect(url);
         }
     };
 
-    // 생성자
+    SimpleUIPlayer mainPlayer;
+    SimpleUIPlayer[] playerList = new SimpleUIPlayer[MAX_PLAYERCOUNT];
+
+
     public UIPlayer(RenderersFactory renderersFactory, TrackSelector trackSelector, LoadControl loadControl, @Nullable DrmSessionManager<FrameworkMediaCrypto> drmSessionManager) {
-        super(renderersFactory, trackSelector, loadControl, drmSessionManager);
-        isService = false;
+        executorService = Executors.newFixedThreadPool(MAX_PLAYERCOUNT);
+        mainPlayer = new SimpleUIPlayer(renderersFactory,trackSelector,loadControl,null);
+        for(int i = 0; i< MAX_PLAYERCOUNT; i++){
+            playerList[i] = new SimpleUIPlayer(renderersFactory,trackSelector,loadControl,null);
+        }
     }
 
     public UIPlayer(RenderersFactory renderersFactory, TrackSelector trackSelector, LoadControl loadControl, @Nullable DrmSessionManager<FrameworkMediaCrypto> drmSessionManager, AnalyticsCollector.Factory analyticsCollectorFactory) {
-        super(renderersFactory, trackSelector, loadControl, drmSessionManager, analyticsCollectorFactory);
-        isService = false;
-    }
-
-    public UIPlayer(RenderersFactory renderersFactory, TrackSelector trackSelector, LoadControl loadControl, @Nullable DrmSessionManager<FrameworkMediaCrypto> drmSessionManager, AnalyticsCollector.Factory analyticsCollectorFactory, Clock clock) {
-        super(renderersFactory, trackSelector, loadControl, drmSessionManager, analyticsCollectorFactory, clock);
-        isService = false;
-    }
-
-    // 서비스 바인딩
-    public void bindService(Context context,Class<?> name){
-        Intent intent = new Intent(context,name);
-        context.bindService(intent,conn,context.BIND_AUTO_CREATE);
-    }
-
-    public void prepare(PlayerListener playerListener,HlsMediaSource hlsmediaSource) {
-        this.playerListener = playerListener;
-        super.prepare(hlsmediaSource);
-    }
-
-    // 미디어 스트리밍 실행, 서버 소켓과의 연결, 사용자 응답 이벤트
-    public void play(final String host, final int port){
-        uiService.init(socketListener, host,port);
-        setPlayWhenReady(true);
-    }
-
-    // 미디어 샘플 재생시간 서버소켓에 전송
-    public void requestPlaytime(){
-        uiService.connet(getCurrentPosition()/1000);
-    }
-
-    // 미디어 샘플 재생시간 확인
-    public void confirmPlaytime(){
-        playerHandler.post(playerAction);
-    }
-
-    // 사용자 응답 처리
-    public void sendResponse(MediaSource mediaSource){
-        prepare(mediaSource);
-        setPlayWhenReady(true);
-    }
-
-    // 미디어 샘플 실행중지
-    public void stop(){
-        setPlayWhenReady(false);
-    }
-
-
-    @Override
-    public void addListener(Player.EventListener listener) {
-        super.addListener(this);
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////
-    ////////////// Player.EventListener Implementation /////////////////////////////////
-
-    @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-        Log.d("msg","onTimelineChanged");
-    }
-
-    @Override
-    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-        Log.d("msg","onTracksChanged");
-    }
-
-    @Override
-    public void onLoadingChanged(boolean isLoading) {
-        Log.d("msg","onLoadingChanged");
-        if(isLoading){
-            confirmPlaytime();
+        mainPlayer = new SimpleUIPlayer(renderersFactory,trackSelector,loadControl,null);
+        for(int i = 0; i< MAX_PLAYERCOUNT; i++){
+            playerList[i] = new SimpleUIPlayer(renderersFactory,trackSelector,loadControl,null);
         }
     }
 
-    @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        Log.d("msg","onPlayerStateChanged"+playbackState);
+    public UIPlayer(RenderersFactory renderersFactory, TrackSelector trackSelector, LoadControl loadControl, @Nullable DrmSessionManager<FrameworkMediaCrypto> drmSessionManager, AnalyticsCollector.Factory analyticsCollectorFactory, Clock clock) {
+        mainPlayer = new SimpleUIPlayer(renderersFactory,trackSelector,loadControl,null);
+        for(int i = 0; i< MAX_PLAYERCOUNT; i++){
+            playerList[i] = new SimpleUIPlayer(renderersFactory,trackSelector,loadControl,null);
+        }
     }
 
-    @Override
-    public void onRepeatModeChanged(int repeatMode) {
-        Log.d("msg","onRepeatModeChanged");
+    public SimpleUIPlayer getUIPlayer(){
+        return mainPlayer;
     }
 
-    @Override
-    public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-        Log.d("msg","onShuffleModeEnabledChanged");
+    public void setDataSourceFactory(DataSource.Factory dataSourceFactory){
+        this.dataSourceFactory = dataSourceFactory;
     }
 
-    @Override
-    public void onPlayerError(ExoPlaybackException error) {
-        Log.d("msg","onPlayerError");
+    // 해당 미디어 소스 mainPlayer에 준비
+    public void prepare(UIListener uiListener, HlsMediaSource hlsmediaSource) {
+        this.uiListener = uiListener;
+        mainPlayer.prepare(playerListener,hlsmediaSource);
     }
 
-    @Override
-    public void onPositionDiscontinuity(int reason) {
-        Log.d("msg","onPositionDiscontinuity");
+    public void connect(Context context, Class<?> name){
+        this.context = context;
+        this.name = name;
+        mainPlayer.connect(context,name);
     }
 
-    @Override
-    public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-        Log.d("msg","onPlaybackParametersChanged");
+    public void play(String host, int port){
+        mainPlayer.play(host,port);
     }
 
-    @Override
-    public void onSeekProcessed() {
-        Log.d("msg","onSeekProcessed");
+    private void settingPlayer(int position, String url){
+//        for(int i=0;i<currentPlayerCount;i++){
+//            Uri uri = Uri.parse(url[i]);
+//            HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+//            playerList[i].prepare(playerListener,hlsMediaSource);
+//        }
+        Uri uri = Uri.parse(url);
+        HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+        playerList[position].prepare(playerListener,hlsMediaSource);
+        Log.d("msg","준비완료");
     }
-    ////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////
+
+    private void setUrl(String[] url){
+        this.url = url;
+    }
+
+    public void decidePlayer(int position){
+        Log.d("msg","decidePlayer");
+        mainPlayer = playerList[position];
+        connect(context,name);
+    }
+
+
 }
