@@ -30,26 +30,16 @@ import com.google.android.exoplayer2.util.Util;
 
 import ows.boostcourse.uiplayer.databinding.ActivityMainBinding;
 import ows.boostcourse.uiplayer2.UIListener;
+import ows.boostcourse.uiplayer2.UIMessage;
 import ows.boostcourse.uiplayer2.UIPlayer;
 import ows.boostcourse.uiplayer2.UIService;
 
 public class MainActivity extends AppCompatActivity{
 
-    public static final String URL = "https://d3rlna7iyyu8wu.cloudfront.net/skip_armstrong/skip_armstrong_multi_language_subs.m3u8";
-
+    public static final String URL = "https://multiplatform-f.akamaihd.net/i/multi/will/bunny/big_buck_bunny_,640x360_400,640x360_700,640x360_1000,950x540_1500,.f4v.csmil/master.m3u8";
     ActivityMainBinding binding;
 
-    // 미디어 Uri
-    Uri uri;
-
-    // 실행할 UIPlayer
-    UIPlayer uiPlayer;
-
-    // 데이터를 요청하기 위한 구성요소 (HTTP, uri ..)
-    DataSource.Factory dataSourceFactory;
-
-    // HLS에 필요한 미디어 샘플 소스
-    HlsMediaSource hlsMediaSource;
+    UIPlayer uiPlayer;      // 실행할 UIPlayer
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,25 +67,31 @@ public class MainActivity extends AppCompatActivity{
         binding.exoplayer.setPlayer(uiPlayer.getUIPlayer());
 
         // 첫 미디어 스트리밍될 uri
-        uri = Uri.parse(URL);
-        dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this,"example-test"));
-        hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+        // 미디어 Uri
+        Uri uri = Uri.parse(URL);
+
+        // 데이터를 요청하기 위한 구성요소 (HTTP, uri ..)
+        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this,"example-test"));
+
+        // HLS에 필요한 미디어 샘플 소스
+        HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
         uiPlayer.setDataSourceFactory(dataSourceFactory);
+        uiPlayer.setHostAndPort("localhost",5001);
+
 
         // UIPlayer 미디어 샘플 실행할 준비
-        // UIplayer로 돌아오는 callback Listener 구현
         uiPlayer.prepare(
-                new UIListener() {
+                new UIListener() {          // UIplayer로 돌아오는 callback Listener 구현
+
+                    // 소켓통신할 서비스 연결 이벤트 콜백
                     @Override
                     public void onConnet() {
-                        // socket 통신을 위한 host, port 정보 보내고 실행
-                        uiPlayer.play(uri.getHost(),uri.getPort());
+
                     }
 
+                    // 사용자에게 응답받는 이벤트 콜백
                     @Override
-                    public void onUserSelect(String[] url) {
-                        final String first_url = url[0];
-                        final String second_url = url[1];
+                    public void onUserSelect(UIMessage uiMessage) {
 
                         // 다이얼로그 생성
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -122,7 +118,10 @@ public class MainActivity extends AppCompatActivity{
                 },
                 hlsMediaSource
         );
+
+        // 소켓통신 서비스 연결
         uiPlayer.connect(this,UIService.class);
+
 
     }
 }
