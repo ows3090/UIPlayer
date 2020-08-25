@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 public class UIMessage implements Serializable {
 
-    private final int MAX_COUNT=4;
+    private final int MAX_COUNT=3;
     private long eventTime;
     private int urlCount;
     private String[] url;

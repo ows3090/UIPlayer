@@ -7,39 +7,30 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
-import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
 import ows.boostcourse.uiplayer.databinding.ActivityMainBinding;
-import ows.boostcourse.uiplayer2.UIListener;
+import ows.boostcourse.uiplayer2.IAPlayer;
+import ows.boostcourse.uiplayer2.IAListener;
 import ows.boostcourse.uiplayer2.UIMessage;
-import ows.boostcourse.uiplayer2.UIPlayer;
-import ows.boostcourse.uiplayer2.UIService;
+import ows.boostcourse.uiplayer2.SocketService;
 
 public class MainActivity extends AppCompatActivity{
 
     public static final String URL = "https://multiplatform-f.akamaihd.net/i/multi/will/bunny/big_buck_bunny_,640x360_400,640x360_700,640x360_1000,950x540_1500,.f4v.csmil/master.m3u8";
     ActivityMainBinding binding;
 
-    UIPlayer uiPlayer;      // 실행할 UIPlayer
+    IAPlayer iaPlayer;      // 실행할 IAPlayer
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,10 +52,10 @@ public class MainActivity extends AppCompatActivity{
         // 미디어 파일 읽고, 디코딩 후 렌더링 요소
         DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(this);
 
-        // UIPlayer 생성
-        uiPlayer = new UIPlayer(renderersFactory,defaultTrackSelector,loadControl,null);
+        // IAPlayer 생성
+        iaPlayer = new IAPlayer(renderersFactory,defaultTrackSelector,loadControl,null);
         binding = DataBindingUtil.setContentView(this,R.layout.activity_main);
-        binding.exoplayer.setPlayer(uiPlayer.getUIPlayer());
+        binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
 
         // 첫 미디어 스트리밍될 uri
         // 미디어 Uri
@@ -75,13 +66,14 @@ public class MainActivity extends AppCompatActivity{
 
         // HLS에 필요한 미디어 샘플 소스
         HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
-        uiPlayer.setDataSourceFactory(dataSourceFactory);
-        uiPlayer.setHostAndPort("localhost",5001);
+        iaPlayer.setDataSourceFactory(dataSourceFactory);
+        iaPlayer.setHostAndPort("localhost",5001);
 
+        // IAPlayer 미디어 샘플 실행할 준비
+        iaPlayer.prepare(
 
-        // UIPlayer 미디어 샘플 실행할 준비
-        uiPlayer.prepare(
-                new UIListener() {          // UIplayer로 돌아오는 callback Listener 구현
+                // UIplayer로 돌아오는 callback Listener 구현
+                new IAListener() {
 
                     // 소켓통신할 서비스 연결 이벤트 콜백
                     @Override
@@ -101,26 +93,26 @@ public class MainActivity extends AppCompatActivity{
                         builder.setPositiveButton("1", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                uiPlayer.decidePlayer(0);
-                                binding.exoplayer.setPlayer(uiPlayer.getUIPlayer());
+                                iaPlayer.decidePlayer(0);
+                                binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
                             }
                         });
 
                         builder.setNegativeButton("2", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                uiPlayer.decidePlayer(1);
-                                binding.exoplayer.setPlayer(uiPlayer.getUIPlayer());
+                                iaPlayer.decidePlayer(1);
+                                binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
                             }
                         });
                         builder.show();
                     }
                 },
                 hlsMediaSource
-        );
+       );
 
         // 소켓통신 서비스 연결
-        uiPlayer.connect(this,UIService.class);
+        iaPlayer.connect(this, SocketService.class);
 
 
     }
