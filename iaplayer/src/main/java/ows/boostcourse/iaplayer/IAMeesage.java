@@ -1,22 +1,21 @@
-package ows.boostcourse.uiplayer2;
-import android.util.Log;
+package ows.boostcourse.iaplayer;
 
 import java.io.Serializable;
 
-public class UIMessage implements Serializable {
+public class IAMeesage implements Serializable {
 
     private final int MAX_COUNT=3;
     private long eventTime;
     private int urlCount;
     private String[] url;
 
-    public UIMessage(){
+    public IAMeesage(){
         eventTime = 10000000;
         urlCount = MAX_COUNT;
         url = new String[MAX_COUNT];
     }
 
-    public UIMessage(long eventTime, int urlCount, String[] url) {
+    public IAMeesage(long eventTime, int urlCount, String[] url) {
         this.eventTime = eventTime;
         this.urlCount = urlCount;
         this.url = url;

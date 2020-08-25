@@ -20,10 +20,10 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
 import ows.boostcourse.uiplayer.databinding.ActivityMainBinding;
-import ows.boostcourse.uiplayer2.IAPlayer;
-import ows.boostcourse.uiplayer2.IAListener;
-import ows.boostcourse.uiplayer2.UIMessage;
-import ows.boostcourse.uiplayer2.SocketService;
+import ows.boostcourse.iaplayer.IAPlayer;
+import ows.boostcourse.iaplayer.IAListener;
+import ows.boostcourse.iaplayer.IAMeesage;
+import ows.boostcourse.iaplayer.SocketService;
 
 public class MainActivity extends AppCompatActivity{
 
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity{
 
                     // 사용자에게 응답받는 이벤트 콜백
                     @Override
-                    public void onUserSelect(UIMessage uiMessage) {
+                    public void onUserSelect(IAMeesage iaMeesage) {
 
                         // 다이얼로그 생성
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -110,7 +110,6 @@ public class MainActivity extends AppCompatActivity{
                 },
                 hlsMediaSource
        );
-
         // 소켓통신 서비스 연결
         iaPlayer.connect(this, SocketService.class);
 

@@ -1,2 +1,2 @@
-include ':app', ':uiplayer2'
+include ':app', ':iaplayer'
 rootProject.name='UIPlayer'

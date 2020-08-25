@@ -1,4 +1,4 @@
-package ows.boostcourse.uiplayer2;
+package ows.boostcourse.iaplayer;
 
 import android.content.Context;
 

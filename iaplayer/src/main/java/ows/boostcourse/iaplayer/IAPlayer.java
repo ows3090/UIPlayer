@@ -1,4 +1,4 @@
-package ows.boostcourse.uiplayer2;
+package ows.boostcourse.iaplayer;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -77,7 +77,7 @@ public class IAPlayer {
     private IAListener iaListener;
 
     // UIPlayer와 UIService의 상호작용 이벤트 리스너
-    private SocketListener socketListener = new SocketListener() {
+    private ServiceListener serviceListener = new ServiceListener() {
 
         @Override
         public void onPreceed() {
@@ -86,9 +86,10 @@ public class IAPlayer {
         }
 
         @Override
-        public void onGetEvent(final UIMessage uiMessage) {
-            currentPlayerCount = uiMessage.getUrlCount();
+        public void onGetEvent(final IAMeesage iaMeesage) {
+            currentPlayerCount = iaMeesage.getUrlCount();
             playerNum = !playerNum;
+            isChanged = true;
 
             for(int i=0;i<currentPlayerCount;i++){
                 int index = 0;
@@ -101,7 +102,7 @@ public class IAPlayer {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        Uri uri = Uri.parse(uiMessage.getUrl()[position]);
+                        Uri uri = Uri.parse(iaMeesage.getUrl()[position]);
                         final HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
                         playerList[position+differ].prepare(hlsMediaSource);
                         Log.d(TAG,"샘플 백그라운드 준비");
@@ -111,15 +112,15 @@ public class IAPlayer {
         }
 
         @Override
-        public void onResponse(UIMessage uiMessage) {
+        public void onResponse(IAMeesage iaMeesage) {
             Log.d(TAG,"onRequestSelect");
             isStart = false;
-            isChanged = true;
             mainPlayer.stop();
             serviceStop();
-            iaListener.onUserSelect(uiMessage);
+            iaListener.onUserSelect(iaMeesage);
         }
     };
+
 
     // SimpleUIPlayer의 재생관련 이벤트 리스너
     private Player.EventListener eventListener = new Player.EventListener() {
@@ -141,6 +142,12 @@ public class IAPlayer {
                 if(!isChanged){
                     play(host,port);
                 }
+                else{
+
+                }
+            }
+            else{
+
             }
         }
 
@@ -155,6 +162,9 @@ public class IAPlayer {
                     }
                     else{ serviceRequest();}
                 } else{ serviceStop();}
+            }
+            else{
+
             }
         }
 
@@ -268,7 +278,7 @@ public class IAPlayer {
     // 플레이어 재생
     public void play(String host, int port){
         Log.d(TAG,"play");
-        socketService.init(socketListener,host,port);
+        socketService.init(serviceListener,host,port);
         mainPlayer.play();
     }
 
