@@ -62,7 +62,7 @@ public class SocketService extends Service {
     }
 
     // interaction 정보 (IAMeesage)를 얻기 위해 서버소켓과 통신
-    public void getIATime(){
+    public void getIATime(final int nextId){
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -70,18 +70,23 @@ public class SocketService extends Service {
                     Socket socket = new Socket(host,port);
 
                     ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-                    outputStream.writeObject("전달");
+                    outputStream.writeObject(nextId);
                     outputStream.flush();
 
                     ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
                     long eventTime = (long)inputStream.readObject();
                     int urlCount = (int)inputStream.readObject();
                     String[] url = (String[])inputStream.readObject();
+                    String[] title = (String[])inputStream.readObject();
+                    int[] nextId = (int[])inputStream.readObject();
 
                     Log.d(TAG,eventTime + ", "+urlCount+", "+url[0]+", "+url[1]);
+                    Log.d(TAG,title[0]+", "+title[1]+", "+nextId[0]+", "+nextId[1]);
                     iaMeesage.setEventTime(eventTime);
                     iaMeesage.setUrlCount(urlCount);
                     iaMeesage.setUrl(url);
+                    iaMeesage.setTitle(title);
+                    iaMeesage.setNextId(nextId);
 
                 }catch (Exception e){
                     e.printStackTrace();

@@ -39,6 +39,7 @@ public class IAPlayer {
 
     private int MAX_PLAYERCOUNT = 3;            // 스트리밍 분기될 임시 Player 최대 갯수
     private int currentPlayerCount;         // 스트리밍 분기될 임시 Player 갯수
+    private int nextId;
     private SimpleIAPlayer mainPlayer;          // 현재 실행될 Player
     private SimpleIAPlayer[] playerList = new SimpleIAPlayer[MAX_PLAYERCOUNT*2];            // 스트리밍 분기를 위한 임시 Player
 
@@ -205,6 +206,7 @@ public class IAPlayer {
         this.isStart = false;
         this.playerNum = false;
         this.currentPlayerCount = MAX_PLAYERCOUNT;
+        this.nextId = 0;
         this.host = DEFAULT_HOST;
         this.port = DEFAULT_PORT;
         mainPlayer = new SimpleIAPlayer(renderersFactory,trackSelector,loadControl,null);
@@ -218,6 +220,7 @@ public class IAPlayer {
         this.isStart = false;
         this.playerNum = false;
         this.currentPlayerCount = MAX_PLAYERCOUNT;
+        this.nextId = 0;
         this.host = DEFAULT_HOST;
         this.port = DEFAULT_PORT;
         mainPlayer = new SimpleIAPlayer(renderersFactory,trackSelector,loadControl,null);
@@ -231,6 +234,7 @@ public class IAPlayer {
         this.isStart = false;
         this.playerNum = false;
         this.currentPlayerCount = MAX_PLAYERCOUNT;
+        this.nextId = 0;
         this.host = DEFAULT_HOST;
         this.port = DEFAULT_PORT;
         mainPlayer = new SimpleIAPlayer(renderersFactory,trackSelector,loadControl,null);
@@ -286,7 +290,7 @@ public class IAPlayer {
     private void serviceStart(){
         Log.d(TAG,"serviceStart");
         isStart = true;
-        socketService.getIATime();
+        socketService.getIATime(nextId);
     }
 
     // 서버소켓에 요청 핸들러에 Runnable객체 전달
@@ -305,8 +309,9 @@ public class IAPlayer {
     }
 
     // 사용자 응답 결과를 바탕으로 새로운 플레이어 지정 후 실행
-    public void decidePlayer(int position){
+    public void decidePlayer(int position,int nextId){
         Log.d(TAG,"decidePlayer");
+        this.nextId = nextId;
         if(playerNum){
             mainPlayer = playerList[position+MAX_PLAYERCOUNT];
         }else{

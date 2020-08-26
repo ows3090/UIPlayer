@@ -4,9 +4,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
 
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
@@ -83,29 +88,63 @@ public class MainActivity extends AppCompatActivity{
 
                     // 사용자에게 응답받는 이벤트 콜백
                     @Override
-                    public void onUserSelect(IAMeesage iaMeesage) {
+                    public void onUserSelect(final IAMeesage iaMeesage) {
+
+                        final Dialog dialog = new Dialog(MainActivity.this);
+                        View view = getLayoutInflater().inflate(R.layout.dialog,null);
+
+                        Button button = view.findViewById(R.id.button);
+                        button.setText(iaMeesage.getTitle()[0]);
+                        button.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                iaPlayer.decidePlayer(0,iaMeesage.getNextId()[0]);
+                                binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
+                                dialog.dismiss();
+                            }
+                        });
+
+                        Button button2 = view.findViewById(R.id.button2);
+                        button2.setText(iaMeesage.getTitle()[1]);
+                        button2.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                iaPlayer.decidePlayer(1,iaMeesage.getNextId()[1]);
+                                binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
+                                dialog.dismiss();
+                            }
+                        });
+                        dialog.setContentView(view);
+
+                        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+                        lp.copyFrom(dialog.getWindow().getAttributes());
+                        lp.width = 1000;
+                        lp.height = 1000;
+                        dialog.getWindow().setAttributes(lp);
+
+                        dialog.show();
 
                         // 다이얼로그 생성
-                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                        builder.setTitle("선택을 고르세여");
-                        builder.setMessage(" 하나만 골라야합니다");
-
-                        builder.setPositiveButton("1", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                iaPlayer.decidePlayer(0);
-                                binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
-                            }
-                        });
-
-                        builder.setNegativeButton("2", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                iaPlayer.decidePlayer(1);
-                                binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
-                            }
-                        });
-                        builder.show();
+//                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+//                        builder.setTitle("선택을 고르세여");
+//                        builder.setMessage(" 하나만 골라야합니다");
+//
+//                        builder.setPositiveButton("1", new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialog, int which) {
+//                                iaPlayer.decidePlayer(0);
+//                                binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
+//                            }
+//                        });
+//
+//                        builder.setNegativeButton("2", new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialog, int which) {
+//                                iaPlayer.decidePlayer(1);
+//                                binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
+//                            }
+//                        });
+//                        builder.show();
                     }
                 },
                 hlsMediaSource
