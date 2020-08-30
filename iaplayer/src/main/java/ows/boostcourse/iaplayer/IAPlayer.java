@@ -27,6 +27,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.util.Clock;
 
+
 public class IAPlayer {
 
     private final static String TAG = "TAG";
@@ -50,6 +51,7 @@ public class IAPlayer {
     private String host;                        // 서버소켓과 연결하기 위한 Host 정보
     private int port;                           // 서버소켓과 연결하기 위한 Port 정보
     private SocketService socketService;        // 소켓 통신할 서비스
+    private boolean isService;
 
     // 비동기를 위한 핸들러, Runnable 객체
     private Handler playerHandler = new Handler();
@@ -66,11 +68,13 @@ public class IAPlayer {
         public void onServiceConnected(ComponentName name, IBinder service) {
             SocketService.LocalBinder localBinder = (SocketService.LocalBinder) service;
             socketService = localBinder.getService();
+            isService = true;
             iaListener.onConnet();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            isService = false;
         }
     };
 
@@ -204,6 +208,7 @@ public class IAPlayer {
     public IAPlayer(RenderersFactory renderersFactory, TrackSelector trackSelector, LoadControl loadControl, @Nullable DrmSessionManager<FrameworkMediaCrypto> drmSessionManager) {
         this.isChanged = false;
         this.isStart = false;
+        this.isService = false;
         this.playerNum = false;
         this.currentPlayerCount = MAX_PLAYERCOUNT;
         this.nextId = 0;
@@ -218,6 +223,7 @@ public class IAPlayer {
     public IAPlayer(RenderersFactory renderersFactory, TrackSelector trackSelector, LoadControl loadControl, @Nullable DrmSessionManager<FrameworkMediaCrypto> drmSessionManager, AnalyticsCollector.Factory analyticsCollectorFactory) {
         this.isChanged = false;
         this.isStart = false;
+        this.isService = false;
         this.playerNum = false;
         this.currentPlayerCount = MAX_PLAYERCOUNT;
         this.nextId = 0;
@@ -232,6 +238,7 @@ public class IAPlayer {
     public IAPlayer(RenderersFactory renderersFactory, TrackSelector trackSelector, LoadControl loadControl, @Nullable DrmSessionManager<FrameworkMediaCrypto> drmSessionManager, AnalyticsCollector.Factory analyticsCollectorFactory, Clock clock) {
         this.isChanged = false;
         this.isStart = false;
+        this.isService = false;
         this.playerNum = false;
         this.currentPlayerCount = MAX_PLAYERCOUNT;
         this.nextId = 0;
@@ -249,16 +256,17 @@ public class IAPlayer {
     }
 
     // 서비스와 connect하는 함수
-    public void connect(Context context, Class<?> name){
+    public boolean connect(Context context, Class<?> name){
         this.context = context;
         this.name = name;
         Intent intent = new Intent(context,name);
-        context.bindService(intent,conn,context.BIND_AUTO_CREATE);
+        return context.bindService(intent,conn,context.BIND_AUTO_CREATE);
     }
 
     // 서비스와 disconnect하는 함수
-    public void disconnect(){
+    public boolean disconnect(){
         context.unbindService(conn);
+        return isService;
     }
 
     // Uri을 Mediasource로 바꾸기 위한 DataSource.Factory 지정
@@ -273,17 +281,19 @@ public class IAPlayer {
     }
 
     // 해당 미디어 소스 mainPlayer에 준비
-    public void prepare(IAListener uiListener, HlsMediaSource hlsmediaSource) {
+    public boolean prepare(IAListener uiListener, HlsMediaSource hlsmediaSource) {
         this.iaListener = uiListener;
         mainPlayer.prepare(hlsmediaSource);
         mainPlayer.addListener(eventListener);
+        return mainPlayer.getPlayWhenReady();
     }
 
     // 플레이어 재생
-    public void play(String host, int port){
+    public boolean play(String host, int port){
         Log.d(TAG,"play");
         socketService.init(serviceListener,host,port);
         mainPlayer.play();
+        return mainPlayer.getPlaybackState()==Player.STATE_READY;
     }
 
     // 서버소켓 연결 (시작 시, 다음 스트리밍 분기 확인)
@@ -315,6 +325,7 @@ public class IAPlayer {
         if(playerNum){
             mainPlayer = playerList[position+MAX_PLAYERCOUNT];
         }else{
+
             mainPlayer = playerList[position];
         }
         mainPlayer.addListener(eventListener);

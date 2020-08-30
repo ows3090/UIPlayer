@@ -88,6 +88,8 @@ public class SocketService extends Service {
                     iaMeesage.setTitle(title);
                     iaMeesage.setNextId(nextId);
 
+                    serviceListener.onGetEvent(iaMeesage);
+
                 }catch (Exception e){
                     e.printStackTrace();
                 }
@@ -100,11 +102,11 @@ public class SocketService extends Service {
         if(time == iaMeesage.getEventTime()){
             serviceListener.onResponse(iaMeesage);
         }
-        else if(time == iaMeesage.getEventTime()-2000){
-            Log.d(TAG,"prepare sample streaming");
-            serviceListener.onGetEvent(iaMeesage);
-            serviceListener.onPreceed();
-        }
+//        else if(time == iaMeesage.getEventTime()-2000){
+//            Log.d(TAG,"prepare sample streaming");
+//
+//            serviceListener.onPreceed();
+//        }
         else{
             serviceListener.onPreceed();
         }

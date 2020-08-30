@@ -5,6 +5,7 @@ import androidx.databinding.DataBindingUtil;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -124,27 +125,6 @@ public class MainActivity extends AppCompatActivity{
 
                         dialog.show();
 
-                        // 다이얼로그 생성
-//                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-//                        builder.setTitle("선택을 고르세여");
-//                        builder.setMessage(" 하나만 골라야합니다");
-//
-//                        builder.setPositiveButton("1", new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                iaPlayer.decidePlayer(0);
-//                                binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
-//                            }
-//                        });
-//
-//                        builder.setNegativeButton("2", new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                iaPlayer.decidePlayer(1);
-//                                binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
-//                            }
-//                        });
-//                        builder.show();
                     }
                 },
                 hlsMediaSource
@@ -154,4 +134,5 @@ public class MainActivity extends AppCompatActivity{
 
 
     }
+
 }

@@ -22,6 +22,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("ows.boostcourse.uiplayer2.test", appContext.getPackageName());
+        assertEquals("ows.boostcourse.iaplayer.test", appContext.getPackageName());
     }
 }
