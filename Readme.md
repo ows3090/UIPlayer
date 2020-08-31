@@ -19,7 +19,8 @@ IAPlayer is a media player that interacts with users. You can make your video's 
 
 ### Component Design
 
-![image-20200831155923692](/Users/owonseog/Library/Application Support/typora-user-images/image-20200831155923692.png)
+![image](https://user-images.githubusercontent.com/34837583/91696433-89609f80-ebaa-11ea-98b0-75e0a13d81a1.png)
+
 
 - IAPlayer : Interaction Player
   IAPlayer has mainPlayer and playerlist.
