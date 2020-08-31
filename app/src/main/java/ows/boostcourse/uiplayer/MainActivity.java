@@ -43,51 +43,50 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 네트워크 대역폭을 설정하는 요소
+        // Component that set the network bandwidth
         DefaultBandwidthMeter defaultBandwidthMeter = new DefaultBandwidthMeter.Builder().build();
 
-        // 트랙 섹션 중 하나로 적응형 트랙섹션
+        // AdaptiveTrackSelection Component
         AdaptiveTrackSelection.Factory adaptiveTrackSelection = new AdaptiveTrackSelection.Factory(defaultBandwidthMeter);
 
-        // 기본 트랙 섹션 설정
+        // Set default track section
         DefaultTrackSelector defaultTrackSelector = new DefaultTrackSelector(adaptiveTrackSelection);
 
-        // 미디어 버퍼링을 컨트롤
+        // Control media buffering
         LoadControl loadControl = new DefaultLoadControl();
 
-        // 미디어 파일 읽고, 디코딩 후 렌더링 요소
+        // Component acting as rendering
         DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(this);
 
-        // IAPlayer 생성
+        // Create IAPlayer
         iaPlayer = new IAPlayer(renderersFactory,defaultTrackSelector,loadControl,null);
         binding = DataBindingUtil.setContentView(this,R.layout.activity_main);
         binding.exoplayer.setPlayer(iaPlayer.getIAPlayer());
 
-        // 첫 미디어 스트리밍될 uri
-        // 미디어 Uri
+        // Media sample uri
         Uri uri = Uri.parse(URL);
 
-        // 데이터를 요청하기 위한 구성요소 (HTTP, uri ..)
+        // Component for requesting data (HTTP, uri ..)
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this,"example-test"));
 
-        // HLS에 필요한 미디어 샘플 소스
+        // Media sample sources required for http live streaming
         HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
         iaPlayer.setDataSourceFactory(dataSourceFactory);
         iaPlayer.setHostAndPort("localhost",5001);
 
-        // IAPlayer 미디어 샘플 실행할 준비
+        // IAPlayer prepare
         iaPlayer.prepare(
 
-                // UIplayer로 돌아오는 callback Listener 구현
+                // Customizeing IAListener
                 new IAListener() {
 
-                    // 소켓통신할 서비스 연결 이벤트 콜백
+                    // Callback method invoked when an event occurs.
                     @Override
                     public void onConnet() {
 
                     }
 
-                    // 사용자에게 응답받는 이벤트 콜백
+                    // Callback method invoked when a user responses.
                     @Override
                     public void onUserSelect(final IAMeesage iaMeesage) {
 
@@ -128,8 +127,7 @@ public class MainActivity extends AppCompatActivity{
                     }
                 },
                 hlsMediaSource
-       );
-        // 소켓통신 서비스 연결
+        );
         iaPlayer.connect(this, SocketService.class);
 
 
