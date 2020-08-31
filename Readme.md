@@ -6,7 +6,8 @@ IAPlayer is a media player that interacts with users. You can make your video's 
 
 ### Project Scenario
 
-![image-20200831160304195](/Users/owonseog/Library/Application Support/typora-user-images/image-20200831160304195.png)
+![image](https://user-images.githubusercontent.com/34837583/91696316-59b19780-ebaa-11ea-9512-02cedae70805.png)
+
 
 1. Start IAPlayer
 2. Foreground : specfic movie playback 
