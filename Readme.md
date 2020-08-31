@@ -16,7 +16,7 @@ IAPlayer is a media player that interacts with users. You can make your video's 
 5. Send a user's response to server
 6. server socket change movie
 
-### Component Desing
+### Component Design
 
 ![image-20200831155923692](/Users/owonseog/Library/Application Support/typora-user-images/image-20200831155923692.png)
 
